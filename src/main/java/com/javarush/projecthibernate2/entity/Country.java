@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class Country {
 
     @Id
-    @Column(name = "county_id")
+    @Column(name = "country_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Short id;
 

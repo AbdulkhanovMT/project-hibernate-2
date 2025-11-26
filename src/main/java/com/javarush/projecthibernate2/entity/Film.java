@@ -7,13 +7,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
 
 @Entity
 @Table(schema = "movie", name = "film")
 public class Film {
-
     @Id
     @Column(name = "film_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +28,8 @@ public class Film {
     private String description;
 
     @Column(name = "release_year", columnDefinition = "year")
-    private Year releaseYear;
+    @Convert(converter = YearAttributeConverter.class)
+    private Year year;
 
     @ManyToOne
     @JoinColumn(name = "language_id")
@@ -42,13 +45,13 @@ public class Film {
     @Column(name = "rental_rate")
     private BigDecimal rentalRate;
 
-    @Column(name = "length")
     private Short length;
 
     @Column(name = "replacement_cost")
     private BigDecimal replacementCost;
 
     @Column(columnDefinition = "enum('G', 'PG', 'PG-13', 'R', 'NC-17')")
+    @Convert(converter = RatingConverter.class)
     private Rating rating;
 
     @Column(name = "special_features", columnDefinition = "set('Trailers', 'Commentaries', 'Deleted Scenes', 'Behind the Scenes')")
@@ -56,18 +59,18 @@ public class Film {
 
     @Column(name = "last_update")
     @UpdateTimestamp
-    private LocalDateTime lastUpdate;
+    private LocalDateTime lastUpdated;
 
     @ManyToMany
-    @JoinTable(name = "film_actor", schema = "movie",
-    joinColumns = @JoinColumn(name = "film_id", referencedColumnName = "film_id"),
+    @JoinTable(name = "film_actor",
+    joinColumns =@JoinColumn(name = "film_id", referencedColumnName = "film_id"),
     inverseJoinColumns = @JoinColumn(name = "actor_id", referencedColumnName = "actor_id"))
     private Set<Actor> actors;
 
     @ManyToMany
-    @JoinTable(name = "film_category", schema = "movie",
-    joinColumns = @JoinColumn(name = "film_id", referencedColumnName = "film_id"),
-    inverseJoinColumns = @JoinColumn(name = "category_id", referencedColumnName = "category_id"))
+    @JoinTable(name = "film_category",
+            joinColumns = @JoinColumn(name = "film_id", referencedColumnName = "film_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id", referencedColumnName = "category_id"))
     private Set<Category> categories;
 
     public Short getId() {
@@ -94,12 +97,12 @@ public class Film {
         this.description = description;
     }
 
-    public Year getReleaseYear() {
-        return releaseYear;
+    public Year getYear() {
+        return year;
     }
 
-    public void setReleaseYear(Year releaseYear) {
-        this.releaseYear = releaseYear;
+    public void setYear(Year year) {
+        this.year = year;
     }
 
     public Language getLanguage() {
@@ -158,23 +161,34 @@ public class Film {
         this.rating = rating;
     }
 
-    public String getSpecialFeatures() {
-        return specialFeatures;
+    public Set<Feature> getSpecialFeatures() {
+        if (isNull(specialFeatures) || specialFeatures.isEmpty()){
+            return null;
+        }
+        Set<Feature> result = new HashSet<>();
+        String[] features = specialFeatures.split(",");
+        for (String feature : features) {
+            result.add(Feature.getFeatureByValue(feature));
+        }
+        result.remove(null);
+        return result;
     }
 
-    public void setSpecialFeatures(Set<Feature> specialFeatures) {
-        String stringOfFeatures = specialFeatures.stream()
-                .map(Feature::toString)
-                .collect(Collectors.joining(", "));
-        this.specialFeatures = stringOfFeatures;
+    public void setSpecialFeatures(Set<Feature> features) {
+        if (isNull(features)){
+            specialFeatures = null;
+        }
+        else {
+            specialFeatures = features.stream().map(Feature::getValue).collect(Collectors.joining(","));
+        }
     }
 
-    public LocalDateTime getLastUpdate() {
-        return lastUpdate;
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
     }
 
-    public void setLastUpdate(LocalDateTime lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     public Set<Actor> getActors() {

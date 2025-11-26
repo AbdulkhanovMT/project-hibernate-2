@@ -10,23 +10,23 @@ public enum Feature {
 
     private final String value;
 
-    Feature(String s) {
-        this.value = s;
+    private Feature(String value) {
+        this.value = value;
     }
 
     public String getValue() {
         return value;
     }
 
-    public static Feature getFeatureFromString(String stringValue) {
-        if(isNull(stringValue) || stringValue.isEmpty()){
+    public static Feature getFeatureByValue(String value) {
+        if (isNull(value) || value.isEmpty()) {
             return null;
         }
 
         Feature[] features = Feature.values();
-        for (Feature f : features) {
-            if (f.value.equals(stringValue)) {
-                return f;
+        for (Feature feature : features) {
+            if (feature.value.equals(value)) {
+                return feature;
             }
         }
         return null;
